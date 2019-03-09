@@ -1,0 +1,17 @@
+version: "2"
+services:
+  app:
+    container_name: boilerplate-api
+    restart: always
+    build: .
+    ports:
+      - "8080:8080"
+    links:
+      - mongo
+  mongo:
+    container_name: boilerplate-api-mongo
+    image: mongo
+    volumes:
+      - ./boilerplate-api-data/data:/data/db
+    ports:
+      - "27017:27017"
