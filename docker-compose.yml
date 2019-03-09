@@ -1,17 +1,15 @@
 version: "2"
 services:
   app:
-    container_name: boilerplate-api
+    container_name: wttr-proxy
     restart: always
     build: .
     ports:
       - "8080:8080"
     links:
-      - mongo
-  mongo:
-    container_name: boilerplate-api-mongo
-    image: mongo
-    volumes:
-      - ./boilerplate-api-data/data:/data/db
+      - redis
+  redis:
+    container_name: wttr-redis
+    image: redis
     ports:
-      - "27017:27017"
+      - "6379:6379"
