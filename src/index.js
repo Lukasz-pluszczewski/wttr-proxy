@@ -1,5 +1,6 @@
 import config from './config';
 import routes from 'routes';
+import errorHandlers from 'errorHandlers';
 
 import createRedis from './services/redisService';
 import createCache from './services/cacheService';
@@ -8,14 +9,15 @@ import simpleExpress from './services/simpleExpress/simpleExpress';
 
 (async() => {
   const redis = await createRedis();
-  const cache = await createCache(redis);
+  const weatherCache = await createCache(redis, 'weather_cache_', 30, 10);
   const wttr = await createWttr();
 
   await simpleExpress({
     port: config.port,
     routes,
+    errorHandlers,
     globalMiddlewares: [],
-    routeParams: { wttr, redis, cache },
+    routeParams: { wttr, redis, weatherCache },
   })
     .then(({ app }) => console.log(`Started on port ${app.server.address().port}`))
     .catch(error => console.error('Error', error));

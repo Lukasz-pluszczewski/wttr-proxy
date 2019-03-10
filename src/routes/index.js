@@ -1,9 +1,9 @@
 import wttr from './wttr';
-import example from './example';
+import notFound from './404';
 
 const routes = [
   ...wttr,
-  ...example,
+  ...notFound,
 ];
 
 export default routes;

@@ -2,7 +2,19 @@ import _ from 'lodash';
 import axios from 'axios';
 import cheerio from 'cheerio';
 
-import windDirections from '../constants/windDirections';
+import NotFound from '../errors/NotFound';
+import WttrError from '../errors/WttrError';
+
+const WIND_DIRECTIONS = {
+  '↓': 'S',
+  '↙': 'SW',
+  '←': 'W',
+  '↖': 'NW',
+  '↑': 'N',
+  '↗': 'NE',
+  '→': 'E',
+  '↘': 'SE',
+};
 
 const UNITS = {
   length: 'km',
@@ -11,13 +23,13 @@ const UNITS = {
   rainfall: 'mm',
 };
 
-// whole text patterns
 const TEMPERATURE_PATTERN = `((?:\\+|-)?\\d+)\\.?\\.?((?:\\+|-)?\\d+)? ${UNITS.temperature}`;
 const WIND_PATTERN = `(\\W) (\\d+)-?(\\d+)? ${UNITS.speed}`;
 const WTF_PATTERN = ` (\\d+) ${UNITS.length} `;
 const RAINFALL_PATTERN = `(\\d+\\.\\d+) ${UNITS.rainfall}`;
 const RAINFALL_PROBABILITY_PATTERN = `(\\d+)%`;
 const DESCRIPTION_PATTERN = '(Clear|Sunny|Partly cloudy|Cloudy|Overcast|Mist|Patchy rain po|Patchy snow po|Patchy sleet p|Patchy freezin|Thundery outbr|Blowing snow|Blizzard|Fog|Freezing fog|Patchy light d|Light drizzle|Freezing drizz|Heavy freezing|Patchy light r|Light rain|Moderate rain |Moderate rain|Heavy rain at |Heavy rain|Light freezing|Moderate or he|Light sleet|Patchy light s|Light snow|Patchy moderat|Moderate snow|Patchy heavy s|Heavy snow|Ice pellets|Light rain sho|Torrential rai|Light sleet sh|Light snow sho)';
+const LOCATION_PATTERN = 'Weather report: (.+)';
 
 const mergeValue = (target, path, values) => {
   _.set(target, path, { ..._.get(target, path), ...values });
@@ -62,17 +74,23 @@ const setValues = (target, getValues, indexMapping, includeNow = true) => {
   return target;
 };
 
-const getWindDirection = windDirectionIcon => windDirections[windDirectionIcon];
+const getWindDirection = windDirectionIcon => WIND_DIRECTIONS[windDirectionIcon];
 
 const wttrService = () => {
-
   const wttrInstance = {
-    parse: html => {
+    parse: async(html, city) => {
       const $ = cheerio.load(html);
+
       const text = $('body > pre').text();
       const execRegex = execRegexOnText(text);
 
       const mappedData = {};
+
+      const [match, locationInterpretedAs] = execRegex(LOCATION_PATTERN);
+      if (!match) {
+        throw new NotFound(`Location ${city} not found`);
+      }
+      mappedData.locationInterpretedAs = locationInterpretedAs;
 
       setValues(mappedData, () => execRegex(TEMPERATURE_PATTERN), { temperatureLow: 1, temperatureHigh: 2 });
       setValues(mappedData, () => execRegex(WIND_PATTERN), { windDirectionIcon: 1, windDirection: values => getWindDirection(values[1]), windLow: 2, windHigh: 3 });
@@ -81,11 +99,9 @@ const wttrService = () => {
       setValues(mappedData, () => execRegex(RAINFALL_PROBABILITY_PATTERN), { rainfallProbability: 1 });
       setValues(mappedData, () => execRegex(DESCRIPTION_PATTERN), { description: 1 });
 
-      // console.log('MappedData', JSON.stringify(mappedData, null, 2));
-
       return mappedData;
     },
-    getWeather: (city = 'Warszawa') => {
+    getWeather: (city = 'London') => {
       return axios({
         method: 'get',
         url: `https://wttr.in/${city}`,
@@ -93,7 +109,10 @@ const wttrService = () => {
           lang: 'en',
         },
       })
-        .then(({ data }) => wttrInstance.parse(data));
+        .catch(error => {
+          throw new WttrError('Request to wttr.in failed', error);
+        })
+        .then(({ data }) => wttrInstance.parse(data, city));
     },
   };
 

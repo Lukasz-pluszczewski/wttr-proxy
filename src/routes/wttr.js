@@ -11,10 +11,10 @@ const wttrRoutes = [
   {
     path: '/:city',
     handlers: {
-      get: async({ body, query, params, originalUrl, protocol, xhr, get, req, wttr, cache }) => {
+      get: async({ body, query, params, originalUrl, protocol, xhr, get, req, wttr, weatherCache }) => {
         const city = encodeURI(params.city);
 
-        const results = await cache.cache(
+        const results = await weatherCache.cache(
           `weather_${city}`,
           () => console.log('executing...', originalUrl) || wttr.getWeather(city)
         );
