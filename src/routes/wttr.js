@@ -16,7 +16,7 @@ const wttrRoutes = [
 
         const results = await weatherCache.cache(
           `weather_${city}`,
-          () => console.log('executing...', originalUrl) || wttr.getWeather(city)
+          () => wttr.getWeather(city)
         );
 
         return {

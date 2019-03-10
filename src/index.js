@@ -9,7 +9,7 @@ import simpleExpress from './services/simpleExpress/simpleExpress';
 
 (async() => {
   const redis = await createRedis();
-  const weatherCache = await createCache(redis, 'weather_cache_', 30, 10);
+  const weatherCache = await createCache(redis, 'weather_cache_', config.weatherCacheTTL, config.weatherCacheUpdateTimeout);
   const wttr = await createWttr();
 
   await simpleExpress({
