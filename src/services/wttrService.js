@@ -17,7 +17,7 @@ const WIND_DIRECTIONS = {
 };
 
 const UNITS = {
-  length: 'km',
+  visibility: 'km',
   speed: 'km/h',
   temperature: '°C',
   rainfall: 'mm',
@@ -25,7 +25,7 @@ const UNITS = {
 
 const TEMPERATURE_PATTERN = `((?:\\+|-)?\\d+)\\.?\\.?((?:\\+|-)?\\d+)? ${UNITS.temperature}`;
 const WIND_PATTERN = `(\\W) (\\d+)-?(\\d+)? ${UNITS.speed}`;
-const WTF_PATTERN = ` (\\d+) ${UNITS.length} `;
+const VISIBILITY_PATTERN = ` (\\d+) ${UNITS.visibility} `;
 const RAINFALL_PATTERN = `(\\d+\\.\\d+) ${UNITS.rainfall}`;
 const RAINFALL_PROBABILITY_PATTERN = `(\\d+)%`;
 const DESCRIPTION_PATTERN = '(Clear|Sunny|Partly cloudy|Cloudy|Overcast|Mist|Patchy rain po|Patchy snow po|Patchy sleet p|Patchy freezin|Thundery outbr|Blowing snow|Blizzard|Fog|Freezing fog|Patchy light d|Light drizzle|Freezing drizz|Heavy freezing|Patchy light r|Light rain|Moderate rain |Moderate rain|Heavy rain at |Heavy rain|Light freezing|Moderate or he|Light sleet|Patchy light s|Light snow|Patchy moderat|Moderate snow|Patchy heavy s|Heavy snow|Ice pellets|Light rain sho|Torrential rai|Light sleet sh|Light snow sho)';
@@ -94,7 +94,7 @@ const wttrService = () => {
 
       setValues(mappedData, () => execRegex(TEMPERATURE_PATTERN), { temperatureLow: 1, temperatureHigh: 2 });
       setValues(mappedData, () => execRegex(WIND_PATTERN), { windDirectionIcon: 1, windDirection: values => getWindDirection(values[1]), windLow: 2, windHigh: 3 });
-      setValues(mappedData, () => execRegex(WTF_PATTERN), { wtf: 1 });
+      setValues(mappedData, () => execRegex(VISIBILITY_PATTERN), { visibility: 1 });
       setValues(mappedData, () => execRegex(RAINFALL_PATTERN), { rainfall: 1 });
       setValues(mappedData, () => execRegex(RAINFALL_PROBABILITY_PATTERN), { rainfallProbability: 1 });
       setValues(mappedData, () => execRegex(DESCRIPTION_PATTERN), { description: 1 });
