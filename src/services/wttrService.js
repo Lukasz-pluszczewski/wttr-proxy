@@ -5,6 +5,49 @@ import cheerio from 'cheerio';
 import NotFound from '../errors/NotFound';
 import WttrError from '../errors/WttrError';
 
+const DESCRIPTIONS = {
+  'Moderate or h': 'heavyRain',
+  Clear: 'sun',
+  Sunny: 'sun',
+  'Partly cloudy': 'sunny',
+  Cloudy: 'cloudy',
+  Overcast: 'cloudy',
+  Mist: 'cloud',
+  'Patchy rain po': 'rain',
+  'Patchy snow po': 'snow',
+  'Patchy sleet p': 'snow',
+  'Patchy freezin': 'rain',
+  'Thundery outbr': 'thunder',
+  'Blowing snow': 'snow',
+  Blizzard: 'snow',
+  Fog: 'cloud',
+  'Freezing fog': 'cloud',
+  'Patchy light d': 'rain',
+  'Light drizzle': 'rain',
+  'Freezing drizz': 'rain',
+  'Heavy freezing': 'heavyRain',
+  'Patchy light r': 'rain',
+  'Light rain': 'Light rain',
+  'Moderate rain ': 'rain',
+  'Moderate rain': 'Moderate rain',
+  'Heavy rain at ': 'heavyRain',
+  'Heavy rain': 'heavyRain',
+  'Light freezing': 'rain',
+  'Moderate or he': 'heavyRain',
+  'Light sleet': 'rain',
+  'Patchy light s': 'snow',
+  'Light snow': 'snow',
+  'Patchy moderat': 'Patchy moderate snow',
+  'Moderate snow': 'snow',
+  'Patchy heavy s': 'snow',
+  'Heavy snow': 'snow',
+  'Ice pellets': 'snow',
+  'Light rain sho': 'rain',
+  'Torrential rai': 'heavyRain',
+  'Light sleet sh': 'rain',
+  'Light snow sho': 'snow',
+};
+
 const WIND_DIRECTIONS = {
   '↓': 'S',
   '↙': 'SW',
@@ -76,6 +119,18 @@ const setValues = (target, getValues, indexMapping, includeNow = true) => {
 
 const getWindDirection = windDirectionIcon => WIND_DIRECTIONS[windDirectionIcon];
 
+const getDescription = description => {
+  if (DESCRIPTIONS[description]) {
+    return DESCRIPTIONS[description];
+  }
+
+  const found = _.find(DESCRIPTIONS, (value, key) => {
+    return ~description.indexOf(key);
+  });
+
+  return found || '';
+};
+
 const wttrService = () => {
   const wttrInstance = {
     parse: async(html, city) => {
@@ -98,6 +153,7 @@ const wttrService = () => {
       setValues(mappedData, () => execRegex(RAINFALL_PATTERN), { rainfall: 1 });
       setValues(mappedData, () => execRegex(RAINFALL_PROBABILITY_PATTERN), { rainfallProbability: 1 });
       setValues(mappedData, () => execRegex(DESCRIPTION_PATTERN), { description: 1 });
+      setValues(mappedData, () => execRegex(DESCRIPTION_PATTERN), { descriptionNormalized: values => getDescription(values[1]) });
 
       return mappedData;
     },
